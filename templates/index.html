@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OCR Web Application - Extract Text from Images</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <h1><i class="fas fa-eye"></i>Document Digitalization</h1>
+                <p class="subtitle">Extract text from handwritten documents using CRAFT + TrOCR</p>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Upload Section -->
+            <section class="upload-section" id="uploadSection">
+                <div class="upload-card">
+                    <h2><i class="fas fa-cloud-upload-alt"></i> Upload Image</h2>
+                    
+                    <!-- Pipeline Selection -->
+                    <div class="pipeline-selection">
+                        <label for="pipelineSelect">Choose OCR Pipeline:</label>
+                        <select id="pipelineSelect" name="pipeline">
+                            <option value="advanced">Advanced Pipeline (Best Quality)</option>
+                            <option value="optimized">Optimized Pipeline (Faster)</option>
+                            <option value="basic">Basic Pipeline (Lightest)</option>
+                        </select>
+                        <div class="pipeline-info">
+                            <small id="pipelineInfo">Advanced pipeline uses ensemble methods for highest accuracy</small>
+                        </div>
+                    </div>
+
+                    <!-- File Upload -->
+                    <div class="upload-area" id="uploadArea">
+                        <input type="file" id="fileInput" accept=".png,.jpg,.jpeg" hidden>
+                        <div class="upload-content">
+                            <i class="fas fa-image upload-icon"></i>
+                            <h3>Drop your image here or click to browse</h3>
+                            <p>Supports PNG, JPG, JPEG files (max 16MB)</p>
+                            <button type="button" class="btn btn-primary" id="browseBtn">
+                                <i class="fas fa-folder-open"></i> Browse Files
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Image Preview -->
+                    <div class="image-preview" id="imagePreview" style="display: none;">
+                        <h3>Selected Image:</h3>
+                        <div class="preview-container">
+                            <img id="previewImg" alt="Selected image">
+                            <div class="preview-info">
+                                <p id="fileName"></p>
+                                <p id="fileSize"></p>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-success" id="processBtn">
+                            <i class="fas fa-cogs"></i> Process Image
+                        </button>
+                        <button type="button" class="btn btn-secondary" id="cancelBtn">
+                            <i class="fas fa-times"></i> Cancel
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Progress Section -->
+            <section class="progress-section" id="progressSection" style="display: none;">
+                <div class="progress-card">
+                    <h2><i class="fas fa-spinner fa-spin"></i> Processing Image</h2>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                    <p class="progress-text" id="progressText">Initializing...</p>
+                    <div class="progress-percentage" id="progressPercentage">0%</div>
+                </div>
+            </section>
+
+            <!-- Results Section -->
+            <section class="results-section" id="resultsSection" style="display: none;">
+                <div class="results-card">
+                    <h2><i class="fas fa-check-circle"></i> Extraction Results</h2>
+                    
+                    <div class="results-summary ">
+                        <div class="summary-item">
+                            <i class="fas fa-list-ol"></i>
+                            <span>Lines Extracted: <strong id="lineCount">0</strong></span>
+                        </div>
+                        <div class="summary-item">
+                            <i class="fas fa-clock"></i>
+                            <span>Processed: <strong id="processedTime">-</strong></span>
+                        </div>
+                    </div>
+
+                    <div class="results-actions">
+                        <button type="button" class="btn btn-primary" id="downloadBtn">
+                            <i class="fas fa-download"></i> Download PDF
+                        </button>
+                        <button type="button" class="btn btn-secondary" id="newImageBtn">
+                            <i class="fas fa-plus"></i> Process New Image
+                        </button>
+                    </div>
+
+                    <div class="extracted-text">
+                        <h3><i class="fas fa-file-alt"></i> Extracted Text</h3>
+                        <div class="text-content" id="extractedText">
+                            <!-- Extracted text will be displayed here -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Error Section -->
+            <section class="error-section" id="errorSection" style="display: none;">
+                <div class="error-card">
+                    <h2><i class="fas fa-exclamation-triangle"></i> Processing Error</h2>
+                    <p class="error-message" id="errorMessage">An error occurred while processing the image.</p>
+                    <button type="button" class="btn btn-primary" id="retryBtn">
+                        <i class="fas fa-redo"></i> Try Again
+                    </button>
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>&copy; 2025 OCR Web Application. Powered by CRAFT + TrOCR + EasyOCR</p>
+        </footer>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>
