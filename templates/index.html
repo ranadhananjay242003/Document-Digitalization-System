@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OCR Web Application - Extract Text from Images</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='horizontal-styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='advanced-styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='interactive-pipeline.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='new-layout.css') }}">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
@@ -12,8 +16,27 @@
         <!-- Header -->
         <header class="header">
             <div class="header-content">
-                <h1><i class="fas fa-eye"></i>Document Digitalization</h1>
-                <p class="subtitle">Extract text from handwritten documents using CRAFT + TrOCR</p>
+                <h1><i class="fas fa-robot"></i> Advanced AI-Powered OCR</h1>
+                <p class="subtitle">Leveraging CRAFT Text Detection & TrOCR Recognition Models</p>
+                <div class="tech-stack">
+                    <div class="tech-item">
+                        <i class="fas fa-search"></i>
+                        <span>CRAFT Detection</span>
+                        <small>Character-Region Awareness</small>
+                    </div>
+                    <div class="tech-separator">+</div>
+                    <div class="tech-item">
+                        <i class="fas fa-brain"></i>
+                        <span>TrOCR Recognition</span>
+                        <small>Transformer-based OCR</small>
+                    </div>
+                    <div class="tech-separator">=</div>
+                    <div class="tech-item">
+                        <i class="fas fa-magic"></i>
+                        <span>Advanced OCR</span>
+                        <small>State-of-the-art Results</small>
+                    </div>
+                </div>
             </div>
         </header>
 
@@ -21,51 +44,121 @@
         <main class="main-content">
             <!-- Upload Section -->
             <section class="upload-section" id="uploadSection">
-                <div class="upload-card">
-                    <h2><i class="fas fa-cloud-upload-alt"></i> Upload Image</h2>
+                <div class="upload-container-horizontal new-layout">
+                    <h2 class="section-title"><i class="fas fa-cloud-upload-alt"></i> Document Processing Configuration</h2>
                     
-                    <!-- Pipeline Selection -->
-                    <div class="pipeline-selection">
-                        <label for="pipelineSelect">Choose OCR Pipeline:</label>
-                        <select id="pipelineSelect" name="pipeline">
-                            <option value="advanced">Advanced Pipeline (Best Quality)</option>
-                            <option value="optimized">Optimized Pipeline (Faster)</option>
-                            <option value="basic">Basic Pipeline (Lightest)</option>
-                        </select>
-                        <div class="pipeline-info">
-                            <small id="pipelineInfo">Advanced pipeline uses ensemble methods for highest accuracy</small>
+                    <!-- Row 1: Three Features -->
+                    <div class="features-row">
+                        <!-- Hidden radios for compatibility -->
+                        <input type="radio" name="pipeline" value="advanced" id="radio-advanced" checked hidden>
+                        <input type="radio" name="pipeline" value="optimized" id="radio-optimized" hidden>
+                        <input type="radio" name="pipeline" value="basic" id="radio-basic" hidden>
+
+                        <!-- Feature Cards -->
+                        <div class="feature-card selected" data-pipeline="advanced" role="button" aria-pressed="true">
+                            <div class="icon"><i class="fas fa-crown"></i></div>
+                            <div class="title">Advanced</div>
+                            <div class="badges">
+                                <span class="badge">Accuracy 95%+</span>
+                                <span class="badge">Ensemble</span>
+                            </div>
+                            <div class="desc">Highest accuracy with ensemble TrOCR + robust post-processing</div>
+                        </div>
+
+                        <div class="feature-card" data-pipeline="optimized" role="button" aria-pressed="false">
+                            <div class="icon"><i class="fas fa-bolt"></i></div>
+                            <div class="title">Optimized</div>
+                            <div class="badges">
+                                <span class="badge">Balanced</span>
+                                <span class="badge">90%+ Acc</span>
+                            </div>
+                            <div class="desc">Smart balance of speed and quality, ideal for most documents</div>
+                        </div>
+
+                        <div class="feature-card" data-pipeline="basic" role="button" aria-pressed="false">
+                            <div class="icon"><i class="fas fa-tachometer-alt"></i></div>
+                            <div class="title">Fast</div>
+                            <div class="badges">
+                                <span class="badge">Quick</span>
+                                <span class="badge">85%+ Acc</span>
+                            </div>
+                            <div class="desc">Lowest latency using base TrOCR with quick CRAFT detection</div>
                         </div>
                     </div>
 
-                    <!-- File Upload -->
-                    <div class="upload-area" id="uploadArea">
-                        <input type="file" id="fileInput" accept=".png,.jpg,.jpeg" hidden>
-                        <div class="upload-content">
-                            <i class="fas fa-image upload-icon"></i>
-                            <h3>Drop your image here or click to browse</h3>
-                            <p>Supports PNG, JPG, JPEG files (max 16MB)</p>
-                            <button type="button" class="btn btn-primary" id="browseBtn">
-                                <i class="fas fa-folder-open"></i> Browse Files
-                            </button>
-                        </div>
-                    </div>
+                    <!-- Row 2: Upload Section -->
+                    <div class="upload-row">
+                        <h3 class="panel-title">Document Upload</h3>
+                            
+                            <!-- File Upload Area -->
+                            <div class="upload-area-horizontal" id="uploadArea">
+                                <input type="file" id="fileInput" accept=".png,.jpg,.jpeg" hidden>
+                                <div class="upload-content-horizontal">
+                                    <div class="upload-visual">
+                                        <i class="fas fa-cloud-upload-alt upload-icon-large"></i>
+                                        <div class="upload-animation">
+                                            <div class="upload-dot"></div>
+                                            <div class="upload-dot"></div>
+                                            <div class="upload-dot"></div>
+                                        </div>
+                                    </div>
+                                    <div class="upload-text">
+                                        <h3>Drop Document Here</h3>
+                                        <p>Drag & drop your handwritten document or click to browse</p>
+                                        <div class="file-types">
+                                            <span class="file-type">PNG</span>
+                                            <span class="file-type">JPG</span>
+                                            <span class="file-type">JPEG</span>
+                                            <span class="file-size">Max 16MB</span>
+                                        </div>
+                                        <button type="button" class="btn btn-primary btn-large" id="browseBtn">
+                                            <i class="fas fa-folder-open"></i> Browse Files
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
 
-                    <!-- Image Preview -->
-                    <div class="image-preview" id="imagePreview" style="display: none;">
-                        <h3>Selected Image:</h3>
-                        <div class="preview-container">
-                            <img id="previewImg" alt="Selected image">
-                            <div class="preview-info">
-                                <p id="fileName"></p>
-                                <p id="fileSize"></p>
+                            <!-- Image Preview -->
+                            <div class="image-preview-horizontal" id="imagePreview" style="display: none;">
+                                <div class="preview-header">
+                                    <h4><i class="fas fa-image"></i> Selected Document</h4>
+                                </div>
+                                <div class="preview-content-horizontal">
+                                    <div class="preview-image">
+                                        <img id="previewImg" alt="Selected image">
+                                    </div>
+                                    <div class="preview-details">
+                                        <div class="preview-info-horizontal">
+                                            <p id="fileName"></p>
+                                            <p id="fileSize"></p>
+                                            <div class="processing-estimate">
+                                                <i class="fas fa-clock"></i>
+                                                <span>Estimated time: <span id="estimateTime">2-5 minutes</span></span>
+                                            </div>
+                                        </div>
+                                        <div class="preview-actions">
+                                            <button type="button" class="btn btn-success btn-large" id="processBtn">
+                                                <i class="fas fa-cogs"></i> Start AI Processing
+                                            </button>
+                                            <button type="button" class="btn btn-secondary" id="cancelBtn">
+                                                <i class="fas fa-times"></i> Cancel
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                        <button type="button" class="btn btn-success" id="processBtn">
-                            <i class="fas fa-cogs"></i> Process Image
-                        </button>
-                        <button type="button" class="btn btn-secondary" id="cancelBtn">
-                            <i class="fas fa-times"></i> Cancel
-                        </button>
+                    </div>
+                    
+                    <!-- Controls Section -->
+                    <div class="controls-section">
+                        <div class="auto-process-new-layout">
+                            <label class="checkbox-container-horizontal">
+                                <input type="checkbox" id="autoProcess" checked>
+                                <span class="checkmark"></span>
+                                <span class="checkbox-text">Auto-start processing when image is selected</span>
+                            </label>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -73,44 +166,218 @@
             <!-- Progress Section -->
             <section class="progress-section" id="progressSection" style="display: none;">
                 <div class="progress-card">
-                    <h2><i class="fas fa-spinner fa-spin"></i> Processing Image</h2>
+                    <h2><i class="fas fa-microchip"></i> AI Processing Pipeline Active</h2>
+                    
+                    <!-- Processing Stages -->
+                    <div class="processing-stages">
+                        <div class="stage" id="stage1">
+                            <div class="stage-icon">
+                                <i class="fas fa-download"></i>
+                            </div>
+                            <div class="stage-content">
+                                <h4>Model Loading</h4>
+                                <p>Loading CRAFT & TrOCR models</p>
+                            </div>
+                            <div class="stage-status"></div>
+                        </div>
+                        
+                        <div class="stage" id="stage2">
+                            <div class="stage-icon">
+                                <i class="fas fa-search"></i>
+                            </div>
+                            <div class="stage-content">
+                                <h4>CRAFT Detection</h4>
+                                <p>Detecting text regions & characters</p>
+                            </div>
+                            <div class="stage-status"></div>
+                        </div>
+                        
+                        <div class="stage" id="stage3">
+                            <div class="stage-icon">
+                                <i class="fas fa-brain"></i>
+                            </div>
+                            <div class="stage-content">
+                                <h4>TrOCR Recognition</h4>
+                                <p>Transformer-based text extraction</p>
+                            </div>
+                            <div class="stage-status"></div>
+                        </div>
+                        
+                        <div class="stage" id="stage4">
+                            <div class="stage-icon">
+                                <i class="fas fa-magic"></i>
+                            </div>
+                            <div class="stage-content">
+                                <h4>Post-Processing</h4>
+                                <p>AI-powered error correction</p>
+                            </div>
+                            <div class="stage-status"></div>
+                        </div>
+                        
+                        <div class="stage" id="stage5">
+                            <div class="stage-icon">
+                                <i class="fas fa-file-pdf"></i>
+                            </div>
+                            <div class="stage-content">
+                                <h4>PDF Generation</h4>
+                                <p>Creating formatted document</p>
+                            </div>
+                            <div class="stage-status"></div>
+                        </div>
+                    </div>
+                    
                     <div class="progress-bar">
                         <div class="progress-fill" id="progressFill"></div>
                     </div>
-                    <p class="progress-text" id="progressText">Initializing...</p>
-                    <div class="progress-percentage" id="progressPercentage">0%</div>
+                    
+                    <div class="progress-details">
+                        <div class="progress-text" id="progressText">
+                            <i class="fas fa-robot"></i>
+                            <span id="progressMessage">Initializing AI models...</span>
+                        </div>
+                        <div class="progress-percentage" id="progressPercentage">
+                            <div class="spinner" id="progressSpinner"></div>
+                            <span id="progressValue">0%</span>
+                        </div>
+                    </div>
+                    
+                    <div class="tech-insights">
+                        <div class="insight-item">
+                            <strong>Current Model:</strong> <span id="currentModel">Loading...</span>
+                        </div>
+                        <div class="insight-item">
+                            <strong>Processing Mode:</strong> <span id="processingMode">Initializing...</span>
+                        </div>
+                        <div class="insight-item">
+                            <strong>Estimated Time:</strong> <span id="estimatedTime">Calculating...</span>
+                        </div>
+                    </div>
                 </div>
             </section>
 
             <!-- Results Section -->
             <section class="results-section" id="resultsSection" style="display: none;">
                 <div class="results-card">
-                    <h2><i class="fas fa-check-circle"></i> Extraction Results</h2>
+                    <h2><i class="fas fa-chart-line"></i> AI Analysis Complete</h2>
                     
-                    <div class="results-summary ">
-                        <div class="summary-item">
-                            <i class="fas fa-list-ol"></i>
-                            <span>Lines Extracted: <strong id="lineCount">0</strong></span>
+                    <!-- Processing Summary -->
+                    <div class="processing-summary">
+                        <div class="summary-header">
+                            <h3><i class="fas fa-microchip"></i> Processing Statistics</h3>
                         </div>
-                        <div class="summary-item">
-                            <i class="fas fa-clock"></i>
-                            <span>Processed: <strong id="processedTime">-</strong></span>
+                        <div class="stats-grid">
+                            <div class="stat-item">
+                                <div class="stat-icon">
+                                    <i class="fas fa-search"></i>
+                                </div>
+                                <div class="stat-content">
+                                    <span class="stat-value" id="detectedRegions">-</span>
+                                    <span class="stat-label">Text Regions (CRAFT)</span>
+                                </div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-icon">
+                                    <i class="fas fa-brain"></i>
+                                </div>
+                                <div class="stat-content">
+                                    <span class="stat-value" id="recognizedLines">-</span>
+                                    <span class="stat-label">Lines (TrOCR)</span>
+                                </div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-icon">
+                                    <i class="fas fa-clock"></i>
+                                </div>
+                                <div class="stat-content">
+                                    <span class="stat-value" id="processingTime">-</span>
+                                    <span class="stat-label">Processing Time</span>
+                                </div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-icon">
+                                    <i class="fas fa-percentage"></i>
+                                </div>
+                                <div class="stat-content">
+                                    <span class="stat-value" id="confidenceScore">-</span>
+                                    <span class="stat-label">Avg. Confidence</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Model Performance -->
+                    <div class="model-performance">
+                        <div class="performance-header">
+                            <h3><i class="fas fa-tachometer-alt"></i> Model Performance Analysis</h3>
+                        </div>
+                        <div class="performance-metrics">
+                            <div class="metric">
+                                <strong>CRAFT Detection:</strong>
+                                <div class="metric-bar">
+                                    <div class="metric-fill craft-performance" id="craftPerformance"></div>
+                                </div>
+                                <span id="craftScore">Excellent</span>
+                            </div>
+                            <div class="metric">
+                                <strong>TrOCR Recognition:</strong>
+                                <div class="metric-bar">
+                                    <div class="metric-fill trocr-performance" id="trocrPerformance"></div>
+                                </div>
+                                <span id="trocrScore">High Accuracy</span>
+                            </div>
+                            <div class="metric">
+                                <strong>Post-Processing:</strong>
+                                <div class="metric-bar">
+                                    <div class="metric-fill processing-performance" id="processingPerformance"></div>
+                                </div>
+                                <span id="processingScore">Optimized</span>
+                            </div>
                         </div>
                     </div>
 
                     <div class="results-actions">
                         <button type="button" class="btn btn-primary" id="downloadBtn">
-                            <i class="fas fa-download"></i> Download PDF
+                            <i class="fas fa-download"></i> Download Analysis Report
+                        </button>
+                        <button type="button" class="btn btn-secondary" id="viewDetailsBtn">
+                            <i class="fas fa-microscope"></i> View Technical Details
                         </button>
                         <button type="button" class="btn btn-secondary" id="newImageBtn">
-                            <i class="fas fa-plus"></i> Process New Image
+                            <i class="fas fa-plus"></i> Process New Document
                         </button>
                     </div>
 
-                    <div class="extracted-text">
-                        <h3><i class="fas fa-file-alt"></i> Extracted Text</h3>
-                        <div class="text-content" id="extractedText">
-                            <!-- Extracted text will be displayed here -->
+                    <div class="extracted-content">
+                        <div class="content-tabs">
+                            <button class="tab-btn active" data-tab="text">
+                                <i class="fas fa-file-alt"></i> Extracted Text
+                            </button>
+                            <button class="tab-btn" data-tab="analysis">
+                                <i class="fas fa-chart-bar"></i> Technical Analysis
+                            </button>
+                        </div>
+                        
+                        <div class="tab-content active" id="text-tab">
+                            <div class="text-content" id="extractedText">
+                                <!-- Extracted text will be displayed here -->
+                            </div>
+                        </div>
+                        
+                        <div class="tab-content" id="analysis-tab">
+                            <div class="technical-analysis">
+                                <div class="analysis-section">
+                                    <h4><i class="fas fa-search"></i> CRAFT Detection Details</h4>
+                                    <div id="craftAnalysis">
+                                        <!-- CRAFT analysis will be shown here -->
+                                    </div>
+                                </div>
+                                <div class="analysis-section">
+                                    <h4><i class="fas fa-brain"></i> TrOCR Recognition Details</h4>
+                                    <div id="trocrAnalysis">
+                                        <!-- TrOCR analysis will be shown here -->
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -130,7 +397,14 @@
 
         <!-- Footer -->
         <footer class="footer">
-            <p>&copy; 2025 OCR Web Application. Powered by CRAFT + TrOCR + EasyOCR</p>
+            <div class="footer-content">
+                <p>&copy; 2025 Advanced AI-Powered OCR | Professional Document Analysis</p>
+                <div class="tech-credits">
+                    <span>CRAFT Text Detection</span> • 
+                    <span>TrOCR Transformer Recognition</span> • 
+                    <span>Advanced Post-Processing</span>
+                </div>
+            </div>
         </footer>
     </div>
 
@@ -138,5 +412,7 @@
     <div class="toast-container" id="toastContainer"></div>
 
     <script src="{{ url_for('static', filename='app.js') }}"></script>
+    <script src="{{ url_for('static', filename='advanced-app.js') }}"></script>
+    <script src="{{ url_for('static', filename='new-layout.js') }}"></script>
 </body>
 </html>

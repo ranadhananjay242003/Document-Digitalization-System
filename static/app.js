@@ -21,8 +21,9 @@ class OCRApp {
         this.fileInput = document.getElementById('fileInput');
         this.uploadArea = document.getElementById('uploadArea');
         this.browseBtn = document.getElementById('browseBtn');
-        this.pipelineSelect = document.getElementById('pipelineSelect');
+        this.pipelineSelect = document.getElementById('pipelineSelect') || document.querySelector('input[name="pipeline"]:checked');
         this.pipelineInfo = document.getElementById('pipelineInfo');
+        this.autoProcess = document.getElementById('autoProcess');
 
         // Preview elements
         this.imagePreview = document.getElementById('imagePreview');
@@ -35,7 +36,10 @@ class OCRApp {
         // Progress elements
         this.progressFill = document.getElementById('progressFill');
         this.progressText = document.getElementById('progressText');
+        this.progressMessage = document.getElementById('progressMessage');
         this.progressPercentage = document.getElementById('progressPercentage');
+        this.progressValue = document.getElementById('progressValue');
+        this.progressSpinner = document.getElementById('progressSpinner');
 
         // Results elements
         this.lineCount = document.getElementById('lineCount');
@@ -127,6 +131,17 @@ class OCRApp {
 
         this.selectedFile = file;
         this.showPreview(file);
+        
+        // Auto-process if enabled
+        if (this.autoProcess.checked) {
+            this.showToast('Auto-processing enabled - Starting in 1 second...', 'info');
+            // Small delay to show preview briefly, then start processing
+            setTimeout(() => {
+                this.processImage();
+            }, 1000);
+        } else {
+            this.showToast('Image ready - Click "Process Image" to start OCR', 'info');
+        }
     }
 
     showPreview(file) {
@@ -144,6 +159,27 @@ class OCRApp {
         // Show preview section
         this.imagePreview.style.display = 'block';
         this.uploadArea.style.display = 'none';
+        
+        // Update button text based on auto-process setting
+        if (this.autoProcess.checked) {
+            this.processBtn.innerHTML = '<i class="fas fa-clock"></i> Auto-processing in 1s...';
+            this.processBtn.disabled = true;
+            
+            // Show countdown
+            let countdown = 1;
+            const countdownInterval = setInterval(() => {
+                if (countdown > 0) {
+                    this.processBtn.innerHTML = `<i class="fas fa-clock"></i> Auto-processing in ${countdown}s...`;
+                    countdown--;
+                } else {
+                    this.processBtn.innerHTML = '<i class="fas fa-cogs"></i> Processing...';
+                    clearInterval(countdownInterval);
+                }
+            }, 1000);
+        } else {
+            this.processBtn.innerHTML = '<i class="fas fa-cogs"></i> Start OCR Processing';
+            this.processBtn.disabled = false;
+        }
     }
 
     cancelSelection() {
@@ -151,6 +187,10 @@ class OCRApp {
         this.fileInput.value = '';
         this.imagePreview.style.display = 'none';
         this.uploadArea.style.display = 'block';
+        
+        // Reset process button
+        this.processBtn.innerHTML = '<i class="fas fa-cogs"></i> Start OCR Processing';
+        this.processBtn.disabled = false;
     }
 
     async processImage() {
@@ -161,7 +201,11 @@ class OCRApp {
 
         const formData = new FormData();
         formData.append('file', this.selectedFile);
-        formData.append('pipeline', this.pipelineSelect.value);
+        
+        // Get pipeline value from radio buttons or select
+        const pipelineValue = document.querySelector('input[name="pipeline"]:checked')?.value || 
+                            this.pipelineSelect?.value || 'advanced';
+        formData.append('pipeline', pipelineValue);
 
         try {
             // Show progress section
@@ -218,15 +262,59 @@ class OCRApp {
                 this.showError(`Status check failed: ${error.message}`);
                 clearInterval(this.statusCheckInterval);
             }
-        }, 1000); // Check every second
+        }, 500); // Check every 500ms for smoother progress
     }
 
     updateProgress(status) {
         const progress = Math.max(0, Math.min(100, status.progress || 0));
         
+        // Update progress bar with smooth transition
         this.progressFill.style.width = `${progress}%`;
-        this.progressPercentage.textContent = `${progress}%`;
-        this.progressText.textContent = status.message || 'Processing...';
+        
+        // Update percentage with animation
+        this.progressValue.textContent = `${progress}%`;
+        
+        // Update message with appropriate icon
+        const messageText = status.message || 'Processing...';
+        let icon = 'fas fa-cogs';
+        
+        if (messageText.includes('Loading') || messageText.includes('models')) {
+            icon = 'fas fa-download';
+        } else if (messageText.includes('Detecting') || messageText.includes('analyzing')) {
+            icon = 'fas fa-search';
+        } else if (messageText.includes('Extracting') || messageText.includes('Processing')) {
+            icon = 'fas fa-robot';
+        } else if (messageText.includes('PDF') || messageText.includes('document')) {
+            icon = 'fas fa-file-pdf';
+        } else if (messageText.includes('Finalizing')) {
+            icon = 'fas fa-check';
+        }
+        
+        // Update the icon in the progress text
+        const iconElement = this.progressText.querySelector('i');
+        if (iconElement) {
+            iconElement.className = icon;
+        }
+        
+        this.progressMessage.textContent = messageText;
+        
+        // Show/hide spinner based on progress
+        if (progress >= 100) {
+            this.progressSpinner.style.display = 'none';
+        } else {
+            this.progressSpinner.style.display = 'inline-block';
+        }
+        
+        // Change progress bar color as it progresses
+        if (progress < 25) {
+            this.progressFill.style.background = 'linear-gradient(90deg, #667eea, #764ba2)';
+        } else if (progress < 50) {
+            this.progressFill.style.background = 'linear-gradient(90deg, #4299e1, #667eea)';
+        } else if (progress < 75) {
+            this.progressFill.style.background = 'linear-gradient(90deg, #38b2ac, #4299e1)';
+        } else {
+            this.progressFill.style.background = 'linear-gradient(90deg, #48bb78, #38b2ac)';
+        }
     }
 
     handleProcessingComplete(result) {
@@ -303,6 +391,10 @@ class OCRApp {
         this.showSection('upload');
         this.imagePreview.style.display = 'none';
         this.uploadArea.style.display = 'block';
+        
+        // Reset process button
+        this.processBtn.innerHTML = '<i class="fas fa-cogs"></i> Start OCR Processing';
+        this.processBtn.disabled = false;
     }
 
     showSection(section) {
@@ -312,6 +404,12 @@ class OCRApp {
         this.resultsSection.style.display = 'none';
         this.errorSection.style.display = 'none';
 
+        // Remove processing animations
+        const progressCard = document.querySelector('.progress-card');
+        if (progressCard) {
+            progressCard.classList.remove('processing');
+        }
+
         // Show selected section
         switch (section) {
             case 'upload':
@@ -319,6 +417,10 @@ class OCRApp {
                 break;
             case 'progress':
                 this.progressSection.style.display = 'block';
+                // Add processing animation
+                if (progressCard) {
+                    progressCard.classList.add('processing');
+                }
                 break;
             case 'results':
                 this.resultsSection.style.display = 'block';

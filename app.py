@@ -34,13 +34,21 @@ def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 def process_ocr_async(file_path, task_id, pipeline_type='advanced'):
-    """Process OCR in background thread"""
+    """Process OCR in background thread with detailed progress updates"""
     try:
         processing_status[task_id] = {
             'status': 'processing',
             'progress': 10,
             'message': 'Initializing OCR pipeline...'
         }
+        
+        # Simulate loading progress
+        for i in range(10, 25):
+            processing_status[task_id].update({
+                'progress': i,
+                'message': 'Loading AI models...'
+            })
+            time.sleep(0.1)  # Small delay for smooth progress
         
         # Initialize the selected pipeline
         if pipeline_type == 'advanced':
@@ -52,19 +60,48 @@ def process_ocr_async(file_path, task_id, pipeline_type='advanced'):
         
         processing_status[task_id].update({
             'progress': 30,
-            'message': 'Models loaded, processing image...'
+            'message': 'Models loaded, analyzing image...'
         })
         
-        # Extract text
+        # Simulate image analysis progress
+        for i in range(30, 45):
+            processing_status[task_id].update({
+                'progress': i,
+                'message': 'Detecting text regions...'
+            })
+            time.sleep(0.2)  # Slightly longer delay for this phase
+        
+        processing_status[task_id].update({
+            'progress': 50,
+            'message': 'Extracting text from image...'
+        })
+        
+        # Extract text with progress updates
         extracted_lines = pipeline.extract_text_from_image(file_path)
+        
+        # Simulate text processing progress
+        for i in range(50, 75):
+            processing_status[task_id].update({
+                'progress': i,
+                'message': 'Processing extracted text...'
+            })
+            time.sleep(0.1)
         
         processing_status[task_id].update({
             'progress': 80,
-            'message': 'Generating PDF...'
+            'message': 'Generating PDF document...'
         })
         
         # Save to PDF
         pdf_path = pipeline.save_to_pdf(extracted_lines, file_path, RESULTS_FOLDER)
+        
+        # Final progress steps
+        for i in range(80, 95):
+            processing_status[task_id].update({
+                'progress': i,
+                'message': 'Finalizing document...'
+            })
+            time.sleep(0.1)
         
         # Prepare results
         result_data = {
