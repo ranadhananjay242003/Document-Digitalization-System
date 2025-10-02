@@ -20,7 +20,7 @@ class AdvancedOCRApp extends OCRApp {
         // Pipeline radio buttons (compatibility with upload API)
         this.pipelineRadios = document.querySelectorAll('input[name="pipeline"]');
         // Interactive pipeline UI elements
-        this.pipelineCards = document.querySelectorAll('.pipeline-card');
+        this.pipelineCards = document.querySelectorAll('.feature-card');
         this.saSlider = document.getElementById('saSlider');
         this.compareToggle = document.getElementById('compareToggle');
         this.comparePanel = document.getElementById('comparePanel');
@@ -70,12 +70,11 @@ class AdvancedOCRApp extends OCRApp {
             card.setAttribute('tabindex', '0');
         });
 
-        // Slider maps to pipeline
+        // Slider maps to pipeline (only Advanced and Optimized)
         if (this.saSlider) {
             this.saSlider.addEventListener('input', (e) => {
                 const v = Number(e.target.value);
-                if (v < 34) this.selectPipeline('basic');
-                else if (v < 67) this.selectPipeline('optimized');
+                if (v < 50) this.selectPipeline('optimized');
                 else this.selectPipeline('advanced');
             });
         }
@@ -88,13 +87,12 @@ class AdvancedOCRApp extends OCRApp {
             });
         }
 
-        // Keyboard shortcuts
+        // Keyboard shortcuts (only Advanced and Optimized)
         window.addEventListener('keydown', (e) => {
             if (e.target && ['INPUT', 'TEXTAREA'].includes(e.target.tagName)) return;
             const key = e.key.toLowerCase();
             if (key === 'a') this.selectPipeline('advanced');
             if (key === 'o') this.selectPipeline('optimized');
-            if (key === 'f') this.selectPipeline('basic');
         });
         
         // Tab system
@@ -112,8 +110,7 @@ class AdvancedOCRApp extends OCRApp {
         const selectedPipeline = document.querySelector('input[name="pipeline"]:checked').value;
         const estimatedTimes = {
             'advanced': '3-5 minutes',
-            'optimized': '1-3 minutes', 
-            'basic': '30s-2 minutes'
+            'optimized': '1-3 minutes'
         };
         
         if (this.estimatedTime) {
@@ -145,7 +142,7 @@ class AdvancedOCRApp extends OCRApp {
 
     updateSliderFromPipeline(pipeline) {
         if (!this.saSlider) return;
-        const map = { basic: 15, optimized: 50, advanced: 85 };
+        const map = { optimized: 25, advanced: 75 };
         const target = map[pipeline] ?? 75;
         this.saSlider.value = String(target);
     }

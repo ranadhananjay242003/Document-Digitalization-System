@@ -52,9 +52,8 @@
                         <!-- Hidden radios for compatibility -->
                         <input type="radio" name="pipeline" value="advanced" id="radio-advanced" checked hidden>
                         <input type="radio" name="pipeline" value="optimized" id="radio-optimized" hidden>
-                        <input type="radio" name="pipeline" value="basic" id="radio-basic" hidden>
 
-                        <!-- Feature Cards -->
+                        <!-- Feature Cards - Only Advanced and Optimized -->
                         <div class="feature-card selected" data-pipeline="advanced" role="button" aria-pressed="true">
                             <div class="icon"><i class="fas fa-crown"></i></div>
                             <div class="title">Advanced</div>
@@ -73,16 +72,6 @@
                                 <span class="badge">90%+ Acc</span>
                             </div>
                             <div class="desc">Smart balance of speed and quality, ideal for most documents</div>
-                        </div>
-
-                        <div class="feature-card" data-pipeline="basic" role="button" aria-pressed="false">
-                            <div class="icon"><i class="fas fa-tachometer-alt"></i></div>
-                            <div class="title">Fast</div>
-                            <div class="badges">
-                                <span class="badge">Quick</span>
-                                <span class="badge">85%+ Acc</span>
-                            </div>
-                            <div class="desc">Lowest latency using base TrOCR with quick CRAFT detection</div>
                         </div>
                     </div>
 
@@ -413,6 +402,5 @@
 
     <script src="{{ url_for('static', filename='app.js') }}"></script>
     <script src="{{ url_for('static', filename='advanced-app.js') }}"></script>
-    <script src="{{ url_for('static', filename='new-layout.js') }}"></script>
 </body>
 </html>

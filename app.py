@@ -6,11 +6,14 @@ from datetime import datetime
 from werkzeug.utils import secure_filename
 import threading
 import time
+import signal
+from concurrent.futures import ThreadPoolExecutor, TimeoutError as FutureTimeoutError
 
 # Import our OCR pipelines
 from src.advanced_ocr_pipeline import AdvancedOCRPipeline
 from src.optimized_ocr_pipeline import OptimizedOCRPipeline
 from src.run_ocr_pipeline import LineBasedOCRPipeline
+from src.fast_ocr_pipeline import FastOCRPipeline
 
 app = Flask(__name__)
 app.secret_key = 'your-secret-key-change-this'  # Change this to a random secret key
@@ -33,75 +36,216 @@ processing_status = {}
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+def create_simple_fallback_pdf(lines, image_path, output_folder):
+    """Create a simple PDF as fallback when main PDF generation fails"""
+    from reportlab.lib.pagesizes import A4
+    from reportlab.platypus import SimpleDocTemplate, Paragraph
+    from reportlab.lib.styles import getSampleStyleSheet
+    from datetime import datetime
+    
+    os.makedirs(output_folder, exist_ok=True)
+    base_name = os.path.splitext(os.path.basename(image_path))[0]
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    output_filename = f"fallback_ocr_{base_name}_{timestamp}.pdf"
+    output_path = os.path.join(output_folder, output_filename)
+    
+    try:
+        doc = SimpleDocTemplate(output_path, pagesize=A4)
+        styles = getSampleStyleSheet()
+        story = []
+        
+        story.append(Paragraph(f"OCR Results - {datetime.now().strftime('%Y-%m-%d %H:%M')}", styles['Heading1']))
+        
+        for line in lines:
+            if line.strip():
+                # Simple text processing to avoid ReportLab issues
+                clean_line = line.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
+                story.append(Paragraph(clean_line, styles['Normal']))
+        
+        doc.build(story)
+        return output_path
+    except Exception as e:
+        print(f"[ERROR] Even fallback PDF failed: {e}")
+        # Return text file as last resort
+        txt_path = output_path.replace('.pdf', '.txt')
+        with open(txt_path, 'w', encoding='utf-8') as f:
+            f.write(f"OCR Results - {datetime.now()}\n" + "=" * 50 + "\n\n")
+            for line in lines:
+                f.write(line + "\n")
+        return txt_path
+
 def process_ocr_async(file_path, task_id, pipeline_type='advanced'):
-    """Process OCR in background thread with detailed progress updates"""
+    """Process OCR in background thread with optimized progress updates"""
+    start_time = time.time()
+    max_total_time = 300  # 5 minutes maximum total time
+    
     try:
         processing_status[task_id] = {
             'status': 'processing',
-            'progress': 10,
+            'progress': 5,
             'message': 'Initializing OCR pipeline...'
         }
         
-        # Simulate loading progress
-        for i in range(10, 25):
-            processing_status[task_id].update({
-                'progress': i,
-                'message': 'Loading AI models...'
-            })
-            time.sleep(0.1)  # Small delay for smooth progress
+        # Quick progress update for model loading
+        processing_status[task_id].update({
+            'progress': 15,
+            'message': 'Loading AI models...'
+        })
         
-        # Initialize the selected pipeline
+        # Initialize the selected pipeline with optimizations
         if pipeline_type == 'advanced':
-            pipeline = AdvancedOCRPipeline(verbose=False, enable_easyocr=False)
+            # Enable EasyOCR as fallback to ensure results
+            pipeline = AdvancedOCRPipeline(verbose=False, enable_easyocr=True)
         elif pipeline_type == 'optimized':
             pipeline = OptimizedOCRPipeline()
-        else:  # basic
-            pipeline = LineBasedOCRPipeline(verbose=False)
+        elif pipeline_type == 'fast':
+            pipeline = FastOCRPipeline()  # Ultra-fast EasyOCR only
+        else:  # default to fast for maximum speed
+            pipeline_type = 'fast'  # Ensure we track that we're using fast
+            pipeline = FastOCRPipeline()  # Use fast by default for best performance
         
         processing_status[task_id].update({
-            'progress': 30,
+            'progress': 25,
             'message': 'Models loaded, analyzing image...'
         })
         
-        # Simulate image analysis progress
-        for i in range(30, 45):
-            processing_status[task_id].update({
-                'progress': i,
-                'message': 'Detecting text regions...'
-            })
-            time.sleep(0.2)  # Slightly longer delay for this phase
-        
+        # Start text detection progress
         processing_status[task_id].update({
-            'progress': 50,
+            'progress': 35,
+            'message': 'Detecting text regions...'
+        })
+        
+        # Start text extraction with progress tracking
+        processing_status[task_id].update({
+            'progress': 45,
             'message': 'Extracting text from image...'
         })
         
-        # Extract text with progress updates
-        extracted_lines = pipeline.extract_text_from_image(file_path)
-        
-        # Simulate text processing progress
-        for i in range(50, 75):
+        # Create a function to update progress during extraction
+        def update_extraction_progress(current_step, total_steps=100):
+            progress = min(95, 45 + int((current_step / total_steps) * 40))
             processing_status[task_id].update({
-                'progress': i,
-                'message': 'Processing extracted text...'
+                'progress': progress,
+                'message': 'Processing text extraction...'
             })
-            time.sleep(0.1)
         
+        # Extract text with simple, reliable progress tracking
+        print(f"[DEBUG] Starting text extraction for task {task_id} using {pipeline_type} pipeline")
+        
+        # Simple progress updates without complex threading
         processing_status[task_id].update({
-            'progress': 80,
+            'progress': 50,
+            'message': 'Processing text extraction...'
+        })
+        
+        try:
+            # Perform actual text extraction with timeout
+            timeout_seconds = 60 if pipeline_type == 'fast' else 120  # 1 min for fast, 2 min for others
+            
+            # Progress update during extraction
+            processing_status[task_id].update({
+                'progress': 65,
+                'message': 'Analyzing text content...'
+            })
+            
+            with ThreadPoolExecutor(max_workers=1) as executor:
+                future = executor.submit(pipeline.extract_text_from_image, file_path)
+                
+                # Simple polling with progress updates
+                start_time = time.time()
+                while not future.done():
+                    elapsed = time.time() - start_time
+                    if elapsed > timeout_seconds:
+                        future.cancel()
+                        raise Exception(f"Text extraction timed out after {timeout_seconds} seconds")
+                    
+                    # Update progress based on elapsed time
+                    progress_percent = min(80, 65 + int((elapsed / timeout_seconds) * 15))
+                    processing_status[task_id].update({
+                        'progress': progress_percent,
+                        'message': 'Processing text extraction...'
+                    })
+                    time.sleep(0.5)  # Check every 0.5 seconds
+                
+                extracted_lines = future.result()
+                print(f"[DEBUG] Text extraction completed successfully for task {task_id}")
+            
+            # Immediately advance progress after extraction
+            processing_status[task_id].update({
+                'progress': 85,
+                'message': 'Text extraction completed!'
+            })
+            
+            print(f"[DEBUG] Extracted {len(extracted_lines)} lines of text for task {task_id}")
+            
+        except Exception as extraction_error:
+            print(f"[ERROR] Text extraction failed for task {task_id}: {extraction_error}")
+            
+            # Try to provide fallback results instead of failing completely
+            try:
+                if pipeline_type == 'advanced' and hasattr(pipeline, 'easyocr_reader') and pipeline.easyocr_reader is not None:
+                    print(f"[DEBUG] Trying EasyOCR fallback for task {task_id}")
+                    # Try basic EasyOCR extraction as fallback
+                    import cv2
+                    image = cv2.imread(file_path)
+                    if image is not None:
+                        easy_result = pipeline.easyocr_reader.readtext(image, detail=1)
+                        if easy_result:
+                            fallback_lines = []
+                            for result in easy_result:
+                                if len(result) >= 3 and result[2] > 0.1:  # Low confidence threshold
+                                    fallback_lines.append(result[1].strip())
+                            
+                            if fallback_lines:
+                                extracted_lines = fallback_lines
+                                print(f"[DEBUG] EasyOCR fallback found {len(extracted_lines)} lines for task {task_id}")
+                            else:
+                                extracted_lines = [f"Text extraction partially failed: {str(extraction_error)[:100]}..."]
+                        else:
+                            extracted_lines = [f"Text extraction failed but processing completed: {str(extraction_error)[:100]}..."]
+                    else:
+                        extracted_lines = [f"Could not read image file: {str(extraction_error)[:100]}..."]
+                else:
+                    extracted_lines = [f"Processing encountered an error: {str(extraction_error)[:100]}..."]
+            except Exception as fallback_error:
+                print(f"[ERROR] Fallback also failed for task {task_id}: {fallback_error}")
+                extracted_lines = [f"Text extraction failed: {str(extraction_error)[:100]}..."]
+            
+            # Continue with PDF generation even if extraction had issues
+            print(f"[DEBUG] Continuing with {len(extracted_lines)} lines despite extraction error")
+        
+        # Generate PDF with progress
+        processing_status[task_id].update({
+            'progress': 90,
             'message': 'Generating PDF document...'
         })
         
-        # Save to PDF
-        pdf_path = pipeline.save_to_pdf(extracted_lines, file_path, RESULTS_FOLDER)
+        print(f"[DEBUG] Starting PDF generation for task {task_id} with {len(extracted_lines)} lines")
         
-        # Final progress steps
-        for i in range(80, 95):
-            processing_status[task_id].update({
-                'progress': i,
-                'message': 'Finalizing document...'
-            })
-            time.sleep(0.1)
+        # Save to PDF with timeout to prevent hanging
+        pdf_generation_start = time.time()
+        try:
+            pdf_path = pipeline.save_to_pdf(extracted_lines, file_path, RESULTS_FOLDER)
+            pdf_time = time.time() - pdf_generation_start
+            print(f"[DEBUG] PDF generation completed in {pdf_time:.2f} seconds for task {task_id}")
+        except Exception as pdf_error:
+            print(f"[ERROR] PDF generation failed for task {task_id}: {pdf_error}")
+            # Create a simple fallback PDF
+            pdf_path = create_simple_fallback_pdf(extracted_lines, file_path, RESULTS_FOLDER)
+            print(f"[DEBUG] Fallback PDF created for task {task_id}")
+        
+        # Force completion to ensure it never gets stuck
+        processing_status[task_id].update({
+            'progress': 95,
+            'message': 'Finalizing document...'
+        })
+        
+        time.sleep(0.1)  # Brief pause
+        
+        processing_status[task_id].update({
+            'progress': 98,
+            'message': 'Almost done...'
+        })
         
         # Prepare results
         result_data = {
@@ -111,6 +255,7 @@ def process_ocr_async(file_path, task_id, pipeline_type='advanced'):
             'processed_at': datetime.now().isoformat()
         }
         
+        # Force final completion
         processing_status[task_id] = {
             'status': 'completed',
             'progress': 100,
@@ -118,13 +263,33 @@ def process_ocr_async(file_path, task_id, pipeline_type='advanced'):
             'result': result_data
         }
         
+        print(f"[DEBUG] Task {task_id} completed successfully with {len(extracted_lines)} lines")
+        
     except Exception as e:
+        elapsed_time = time.time() - start_time
+        print(f"[ERROR] Task {task_id} failed after {elapsed_time:.2f} seconds: {e}")
+        
         processing_status[task_id] = {
             'status': 'error',
-            'progress': 0,
+            'progress': 100,  # Set to 100 so UI knows it's done
             'message': f'Error processing image: {str(e)}',
             'error': str(e)
         }
+    
+    # Final safety check - ensure we never leave a task in limbo
+    finally:
+        if task_id in processing_status:
+            current_status = processing_status[task_id]
+            if current_status.get('status') == 'processing' and current_status.get('progress', 0) < 100:
+                # Force completion if still processing
+                elapsed_time = time.time() - start_time
+                print(f"[WARNING] Force completing task {task_id} after {elapsed_time:.2f} seconds")
+                
+                processing_status[task_id].update({
+                    'status': 'completed' if current_status.get('progress', 0) > 50 else 'error',
+                    'progress': 100,
+                    'message': 'Processing completed (forced)' if current_status.get('progress', 0) > 50 else 'Processing failed (timeout)',
+                })
 
 @app.route('/')
 def index():
@@ -136,7 +301,7 @@ def upload_file():
         return jsonify({'error': 'No file selected'}), 400
     
     file = request.files['file']
-    pipeline_type = request.form.get('pipeline', 'advanced')
+    pipeline_type = request.form.get('pipeline', 'fast')  # Default to fast pipeline for speed
     
     if file.filename == '':
         return jsonify({'error': 'No file selected'}), 400
@@ -214,6 +379,15 @@ def health_check():
         'active_tasks': len([k for k, v in processing_status.items() if v['status'] == 'processing'])
     })
 
+@app.route('/debug/status')
+def debug_status():
+    """Debug endpoint to see all task statuses"""
+    return jsonify({
+        'total_tasks': len(processing_status),
+        'tasks': processing_status,
+        'timestamp': datetime.now().isoformat()
+    })
+
 # Cleanup old tasks periodically
 def cleanup_old_tasks():
     """Remove tasks older than 1 hour"""
@@ -234,4 +408,15 @@ def cleanup_old_tasks():
 if __name__ == '__main__':
     print("Starting OCR Web Application...")
     print("Available at: http://localhost:5000")
-    app.run(debug=True, host='0.0.0.0', port=5000, threaded=True)
+    
+    # Use a more robust server configuration
+    import logging
+    log = logging.getLogger('werkzeug')
+    log.setLevel(logging.ERROR)  # Reduce verbose logging
+    
+    try:
+        app.run(debug=True, host='0.0.0.0', port=5000, threaded=True, use_reloader=False)
+    except KeyboardInterrupt:
+        print("\nShutting down OCR Web Application...")
+    except Exception as e:
+        print(f"Server error: {e}")

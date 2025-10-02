@@ -41,9 +41,9 @@ class OCRApp {
         this.progressValue = document.getElementById('progressValue');
         this.progressSpinner = document.getElementById('progressSpinner');
 
-        // Results elements
-        this.lineCount = document.getElementById('lineCount');
-        this.processedTime = document.getElementById('processedTime');
+        // Results elements (use the correct IDs from HTML)
+        this.lineCount = document.getElementById('recognizedLines');
+        this.processedTime = document.getElementById('processingTime');
         this.extractedText = document.getElementById('extractedText');
         this.downloadBtn = document.getElementById('downloadBtn');
         this.newImageBtn = document.getElementById('newImageBtn');
@@ -59,16 +59,30 @@ class OCRApp {
     attachEventListeners() {
         // File input events
         this.fileInput.addEventListener('change', (e) => this.handleFileSelect(e));
-        this.browseBtn.addEventListener('click', () => this.fileInput.click());
-
+        
+        // Browse button click handler
+        this.browseBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            this.fileInput.click();
+        });
+        
+        // Upload area click handler (only if not clicking on browse button)
+        this.uploadArea.addEventListener('click', (e) => {
+            if (e.target !== this.browseBtn && !this.browseBtn.contains(e.target)) {
+                this.fileInput.click();
+            }
+        });
+        
         // Drag and drop events
-        this.uploadArea.addEventListener('click', () => this.fileInput.click());
         this.uploadArea.addEventListener('dragover', (e) => this.handleDragOver(e));
         this.uploadArea.addEventListener('dragleave', (e) => this.handleDragLeave(e));
         this.uploadArea.addEventListener('drop', (e) => this.handleFileDrop(e));
 
-        // Pipeline selection
-        this.pipelineSelect.addEventListener('change', () => this.updatePipelineInfo());
+        // Pipeline selection (only if element exists)
+        if (this.pipelineSelect) {
+            this.pipelineSelect.addEventListener('change', () => this.updatePipelineInfo());
+        }
 
         // Button events
         this.processBtn.addEventListener('click', () => this.processImage());
@@ -79,6 +93,8 @@ class OCRApp {
     }
 
     updatePipelineInfo() {
+        if (!this.pipelineSelect || !this.pipelineInfo) return;
+        
         const pipeline = this.pipelineSelect.value;
         const infoTexts = {
             'advanced': 'Advanced pipeline uses ensemble methods for highest accuracy but takes longer',
@@ -262,7 +278,7 @@ class OCRApp {
                 this.showError(`Status check failed: ${error.message}`);
                 clearInterval(this.statusCheckInterval);
             }
-        }, 500); // Check every 500ms for smoother progress
+        }, 200); // Check every 200ms for smoother progress
     }
 
     updateProgress(status) {
@@ -318,9 +334,13 @@ class OCRApp {
     }
 
     handleProcessingComplete(result) {
-        // Update results display
-        this.lineCount.textContent = result.line_count || 0;
-        this.processedTime.textContent = this.formatDateTime(result.processed_at);
+        // Update results display (with safety checks)
+        if (this.lineCount) {
+            this.lineCount.textContent = result.line_count || 0;
+        }
+        if (this.processedTime) {
+            this.processedTime.textContent = this.formatDateTime(result.processed_at);
+        }
 
         // Display extracted text
         this.displayExtractedText(result.lines || []);
@@ -496,9 +516,12 @@ class OCRApp {
     }
 }
 
-// Initialize app when DOM is loaded
+// Initialize app when DOM is loaded (only if AdvancedOCRApp is not defined)
 document.addEventListener('DOMContentLoaded', () => {
-    new OCRApp();
+    // Check if AdvancedOCRApp exists, if so, let it handle initialization
+    if (typeof AdvancedOCRApp === 'undefined') {
+        new OCRApp();
+    }
 });
 
 // Prevent default drag behaviors on the document

@@ -40,15 +40,34 @@ class OptimizedOCRPipeline:
         
         print("Loading TrOCR models...")
         try:
-            self.trocr_processor = TrOCRProcessor.from_pretrained("microsoft/trocr-large-handwritten")
-            self.trocr_model = VisionEncoderDecoderModel.from_pretrained("microsoft/trocr-large-handwritten")
-            print("Using TrOCR large model")
+            # Use base model for faster processing in optimized pipeline
+            self.trocr_processor = TrOCRProcessor.from_pretrained(
+                "microsoft/trocr-base-handwritten",
+                use_fast=True  # Enable faster processing
+            )
+            self.trocr_model = VisionEncoderDecoderModel.from_pretrained(
+                "microsoft/trocr-base-handwritten",
+                torch_dtype=torch.float16 if torch.cuda.is_available() else torch.float32  # Use half precision on GPU
+            )
+            print("Using TrOCR base model with speed optimizations")
         except:
+            # Fallback to basic loading
             self.trocr_processor = TrOCRProcessor.from_pretrained("microsoft/trocr-base-handwritten")
             self.trocr_model = VisionEncoderDecoderModel.from_pretrained("microsoft/trocr-base-handwritten")
-            print("Using TrOCR base model")
+            print("Using TrOCR base model (fallback)")
         
         self.trocr_model.eval()
+        
+        # Enable inference optimizations for speed
+        if hasattr(self.trocr_model, 'half') and torch.cuda.is_available():
+            self.trocr_model = self.trocr_model.half()  # Use half precision for speed
+            
+        # Optimize for inference
+        if hasattr(torch, 'jit'):
+            try:
+                self.trocr_model = torch.jit.optimize_for_inference(self.trocr_model)
+            except:
+                pass  # Skip if optimization fails
         
         print("Loading EasyOCR...")
         self.easyocr_reader = easyocr.Reader(['en'], gpu=False)
