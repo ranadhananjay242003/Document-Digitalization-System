@@ -9,6 +9,7 @@ easyocr>=1.6.0
 scikit-image>=0.19.0
 scipy>=1.9.0
 gunicorn
+matplotlib
 
 # PDF Generation
 reportlab>=3.6.0
