@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 from flask import Flask, request, jsonify, render_template, send_file, flash, redirect, url_for
 import os
 import uuid
