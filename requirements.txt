@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Core OCR Dependencies
 # PyTorch - Install separately first: pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
 torch>=1.13.0
@@ -20,3 +21,30 @@ Werkzeug>=2.2.0
 
 # Utilities
 numpy>=1.21.0
+||||||| (empty tree)
+=======
+# Core OCR Dependencies
+# PyTorch - Install separately first: pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
+torch>=1.13.0
+torchvision>=0.14.0
+transformers>=4.21.0
+opencv-python>=4.7.0
+Pillow>=9.0.0
+easyocr>=1.6.0
+scikit-image>=0.19.0
+scipy>=1.9.0
+gunicorn
+matplotlib
+
+# PDF Generation
+reportlab>=3.6.0
+
+# Web Framework
+Flask>=2.2.0
+Werkzeug>=2.2.0
+
+# Utilities
+numpy>=1.21.0
+pyspellchecker>=0.7.0
+symspellpy>=6.7.8
+>>>>>>> a3deb97 (Change in OCR Accuracy)
